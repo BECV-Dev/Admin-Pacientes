@@ -1,5 +1,5 @@
 <script setup>
-    import { reactive } from 'vue'
+    import { reactive, computed } from 'vue'
     import Alerta from './Alert.vue'
 
     const alerta = reactive({
@@ -10,6 +10,10 @@
     const emit = defineEmits(['update:nombre', 'update:propietario', 'update:email', 'update:alta', 'update:sintomas', 'guardar-paciente'])
 
     const props = defineProps({
+        id: {
+            type: [String, null],
+            required: true
+        },
         nombre: {
             type: String,
             required: true
@@ -34,14 +38,41 @@
 
     const validar = () => {
         if(Object.values(props).includes('')){
-            alerta.mensaje = 'Todos los campos son obligatorios'
-            alerta.tipo = 'error'
+            showAlert(alerta, 'error', 'Todos los campos son obligatorios')
+            // alerta.mensaje = 'Todos los campos son obligatorios'
+            // alerta.tipo = 'error'
             return
         }
-        alerta.mensaje = 'Guardado con éxito'
-        alerta.tipo = 'exito'
-        emit('guardar-paciente')
+
+        if(editando.value){
+            emit('guardar-paciente')
+            showAlert(alerta, 'exito', 'Paciente actualizado correctamente')
+        }else{
+            emit('guardar-paciente')
+            showAlert(alerta, 'exito', 'Paciente almacenado correctamente')
+        }
+        
+        // emit('guardar-paciente')
+        // showAlert(alerta, 'exito', 'Paciente almacenado correctamente')
+        // alerta.mensaje = 'Paciente almacenado correctamente'
+        // alerta.tipo = 'exito'
     }
+
+    function showAlert(alerta, tipo, mensaje, timeout = 3000){
+        alerta.tipo = tipo
+        alerta.mensaje = mensaje
+        
+        setTimeout(() => {
+            Object.assign(alerta, {
+                tipo: '',
+                mensaje: ''
+            })
+        }, timeout)
+    }
+
+    const editando = computed(() => {
+        return props.id
+    })
 
 </script>
 
@@ -63,9 +94,6 @@
         class="bg-white shadow-md rounded-lg py-10 px-5 mb-10"
         @submit.prevent="validar"
     >
-
-    {{ nombre }}
-    {{ propietario }}
 
     <div class="mb-5">
         <label 
@@ -157,8 +185,9 @@
 
     <input 
         type="submit"
-        class="bg-indigo-600 w-full p-3 text-white uppercase font-bold hover:bg-indigo-700 cursor-pointer transition-colors"
-        value="Registrar paciente"
+        :class="[editando ? 'bg-orange-600 hover:bg-orange-700' : 'bg-indigo-600 hover:bg-indigo-700']"
+        class="w-full p-3 text-white uppercase font-bold cursor-pointer transition-colors"
+        :value="[editando ? 'Actualizar paciente' : 'Registrar paciente']"
     />
 
     </form>
